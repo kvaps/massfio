@@ -8,10 +8,10 @@ if ! [ -f "$1" ]; then
 fi
 
 trap 'kill $(jobs -p); echo;' EXIT
+rm -f results/errors.log
 
 for client in "${@:2}"; do
     mkdir -p "results/$client"
-    rm -f results/errors.log
     while [ $? == 0 ]; do
         fio --alloc-size=kb --output "results/$client/$(date +"%m-%d-%Y-%T").txt" --client "$client" "$1" > /dev/null 2>> results/errors.log
     done &
@@ -19,14 +19,23 @@ done
 
 while true; do
     printf "\033c"
-    echo "----------------"
-    echo "| running jobs |"
-    echo "----------------"
-    ps T | grep fio | grep -v 'massfio\|grep'
+    echo "---------"
+    echo "| Total |"
+    echo "---------"
+    echo
+    echo "Jobs: $(ps T | grep fio | grep -v 'massfio\|grep' | wc -l)"
+    echo "Errors: " $(cat results/errors.log | grep -v "Connection refused" | wc -l)
+    echo
+    echo "-------------"
+    echo "| last jobs |"
+    echo "-------------"
+    echo
+    ps T | grep fio | grep -v 'massfio\|grep' | tail -n 10
     echo
     echo "---------------"
     echo "| last errors |"
     echo "---------------"
-    tail results/errors.log
+    echo
+    tail -n 10 results/errors.log | grep -v "Connection refused"
     sleep 2
 done
