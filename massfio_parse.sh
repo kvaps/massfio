@@ -24,16 +24,22 @@ avg() {
 '
 }
 
+print_scientific(){
+    while read data; do
+        printf '%.0f' $data
+    done
+}
+
 convert_bw(){
     while read data; do
-        echo $data | awk '/[0-9]$/{print $1;next};/[kK]$/{printf "%u\n", $1;next};/[gG]$/{printf "%u\n", $1*(1024*1024);next};/[mM]$/{printf "%u\n", $1*1024;next}'
+        echo $data | awk '/[0-9]$/{print $1;next};/[kK]$/{printf "%u\n", $1/1024;next};/[gG]$/{printf "%u\n", $1*(1024);next};/[mM]$/{printf "%u\n", $1;next}'
     done
 }
 
 convert_iops(){
     while read data; do
         if [[ $data  == *k* ]]; then
-            echo "$(echo $data | sed 's/k//g') * 1000" | bc
+            echo $data | awk '{print $1*1000 }'
         else
             echo $data
         fi
@@ -43,9 +49,9 @@ convert_iops(){
 convert_lat(){
     while read data; do
         if [[ $data  == *\(usec\)* ]]; then
-            echo $data | grep -oP '(?<=avg=)[0-9]*' 
+            echo $data | grep -oP '(?<=avg=)[0-9.]*' | awk '{print $1/1000 }'
         elif [[ $data  == *\(msec\)* ]]; then
-            echo "$(echo $data | grep -oP '(?<=avg=)[0-9]*') * 1000" | bc
+            echo $data | grep -oP '(?<=avg=)[0-9.]*'
         fi
     done
 }
@@ -62,15 +68,15 @@ echo
 
 echo -n "latency: "
 echo -n $(grep -r writetest -A3 $1 | grep clat | convert_lat | avg)
-echo " (usec)"
+echo " (msec)"
 
 
 echo -n "bandwidth: "
 echo -n $(grep -r writetest $1 -A1 | grep -oP '(?<=BW=)[0-9.kKmMgG]*' | convert_bw | avg)
-echo " KiB/s"
+echo " MiB/s"
 
 echo -n "IOPS: "
-echo $(grep -r writetest $1 -A1 | grep -oP '(?<=IOPS=)[0-9.k]*' | convert_iops | avg)
+echo $(grep -r writetest $1 -A1 | grep -oP '(?<=IOPS=)[0-9.k]*' | convert_iops | avg | print_scientific)
 echo
 
 echo
@@ -85,14 +91,14 @@ echo
 
 echo -n "latency: "
 echo -n $(grep -r readtest -A3 $1 | grep clat | convert_lat | avg)
-echo " (usec)"
+echo " (msec)"
 
 echo -n "bandwidth: "
 echo -n $(grep -r readtest $1 -A1 | grep -oP '(?<=BW=)[0-9.kKmMgG]*' | convert_bw | avg)
-echo " KiB/s"
+echo " MiB/s"
 
 echo -n "IOPS: "
-echo -n $(grep -r readtest $1 -A1 | grep -oP '(?<=IOPS=)[0-9.k]*' | convert_iops | avg)
+echo -n $(grep -r readtest $1 -A1 | grep -oP '(?<=IOPS=)[0-9.k]*' | convert_iops | avg | print_scientific)
 echo
 
 echo 

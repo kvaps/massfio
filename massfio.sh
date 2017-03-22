@@ -12,7 +12,8 @@ rm -f results/errors.log
 
 for client in "${@:2}"; do
     mkdir -p "results/$client"
-    while [ $? == 0 ]; do
+    #while [ $? == 0 ]; do
+    while true; do
         fio --alloc-size=kb --output "results/$client/$(date +"%m-%d-%Y-%T").txt" --client "$client" "$1" > /dev/null 2>> results/errors.log
     done &
 done
