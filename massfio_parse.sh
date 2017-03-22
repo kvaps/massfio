@@ -42,9 +42,9 @@ convert_iops(){
 
 convert_lat(){
     while read data; do
-        if [[ $data  == *(usec)* ]]; then
+        if [[ $data  == *\(usec\)* ]]; then
             echo $data | grep -oP '(?<=avg=)[0-9]*' 
-        elif [[ $data  == *(msec)* ]]; then
+        elif [[ $data  == *\(msec\)* ]]; then
             echo "$(echo $data | grep -oP '(?<=avg=)[0-9]*') * 1000" | bc
         fi
     done
