@@ -32,7 +32,7 @@ print_scientific(){
 
 convert_bw(){
     while read data; do
-        echo $data | awk '/[0-9]$/{print $1;next};/[kK]$/{printf "%u\n", $1/1024;next};/[gG]$/{printf "%u\n", $1*(1024);next};/[mM]$/{printf "%u\n", $1;next}'
+        echo $data | awk '/[0-9]$/{print $1;next};/[kK]$/{printf "%u\n", $1;next};/[gG]$/{printf "%u\n", $1*(1024*1024);next};/[mM]$/{printf "%u\n", $1*1024;next}'
     done
 }
 
@@ -73,7 +73,7 @@ echo " (msec)"
 
 echo -n "bandwidth: "
 echo -n $(grep -r writetest $1 -A1 | grep -oP '(?<=BW=)[0-9.kKmMgG]*' | convert_bw | avg)
-echo " MiB/s"
+echo " KiB/s"
 
 echo -n "IOPS: "
 echo $(grep -r writetest $1 -A1 | grep -oP '(?<=IOPS=)[0-9.k]*' | convert_iops | avg | print_scientific)
@@ -95,7 +95,7 @@ echo " (msec)"
 
 echo -n "bandwidth: "
 echo -n $(grep -r readtest $1 -A1 | grep -oP '(?<=BW=)[0-9.kKmMgG]*' | convert_bw | avg)
-echo " MiB/s"
+echo " KiB/s"
 
 echo -n "IOPS: "
 echo -n $(grep -r readtest $1 -A1 | grep -oP '(?<=IOPS=)[0-9.k]*' | convert_iops | avg | print_scientific)
